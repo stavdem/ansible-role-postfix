@@ -1,0 +1,63 @@
+readme_directory = no
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+mail_owner = postfix
+
+myhostname = {{ ansible_fqdn }}
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mydestination = {{mydestination}}
+
+debug_peer_level = 2
+debugger_command =
+         PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+         ddd $daemon_directory/$process_name $process_id & sleep 5
+sendmail_path = /usr/sbin/sendmail.postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+setgid_group = postdrop
+
+{% if primary_server in inventory_hostname or secondary_server in inventory_hostname %}
+mynetworks = {{postfix_relay_networks}}
+
+{% else %}
+mynetworks = {{postfix_networks}}
+{% endif %}
+
+mailbox_size_limit = 18432000
+anvil_rate_time_unit = 60s
+smtpd_client_message_rate_limit = 5
+smtp_generic_maps = hash:/etc/postfix/generic
+html_directory = no
+recipient_delimiter = +
+inet_protocols = all
+
+{% if primary_server in inventory_hostname %}
+relay_domains = {{relay_domain}}
+smtp_sender_dependent_authentication = yes
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+sender_dependent_relayhost_maps = hash:/etc/postfix/relayhost_map
+transport_maps = hash:/etc/postfix/transport
+inet_interfaces = all
+
+{% elif secondary_server in inventory_hostname %}
+relayhost = {{relay_dmz}}
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd_02
+smtp_sasl_security_options = noanonymous
+smtp_tls_security_level = may
+inet_interfaces = all
+
+{% else %}
+relayhost = {{postfix_relay_server}}
+inet_interfaces = localhost
+
+{% endif %}
+
+

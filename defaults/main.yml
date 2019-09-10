@@ -1,0 +1,36 @@
+---
+postfix_networks: "127.0.0.0/8"
+postfix_relay_networks: "10.0.0.0/8, 127.0.0.0/8"
+
+
+relay_server_g1: "mx01.example.com"
+relay_dmz: "10.10.10.10"
+relay_domain: "example.com"
+
+postfix_inet_interfaces: loopback-only
+postfix_inet_protocols: all
+mydestination: "{{ansible_fqdn}} localhost"
+mail: it@example.com
+primary_server: server01
+secondary_server: server02
+postfix_relay_server: "server02"
+
+sasl_passwd: [
+" ",
+" ",
+" "
+]
+
+sasl_passwd_02: [
+" "
+]
+
+relayhost_map: [
+" ",
+" ",
+" "
+]
+
+generic: [
+" "
+]

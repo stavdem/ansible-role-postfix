@@ -1,0 +1,67 @@
+---
+ - name: install
+   yum:
+     name: mailx
+     state: latest
+
+ - name: create postfix configuration
+   template:
+     src: main.cf.j2
+     dest: /etc/postfix/main.cf
+     mode: '0644'
+     owner: root
+     group: root
+   notify: restart postfix
+
+ - name: create postfix generic file
+   template:
+     src: generic.j2
+     dest: /etc/postfix/generic
+     mode: '0644'
+     owner: root
+     group: root
+   notify: postmap generic
+
+ - name: create postfix relayhost_map file
+   template:
+     src: relayhost_map.j2
+     dest: /etc/postfix/relayhost_map
+     mode: '0644'
+     owner: root
+     group: root
+   notify: postmap relayhost_map
+   when: ansible_facts['hostname'] == primary_server
+
+ - name: create postfix sasl_passwd file
+   template:
+     src: sasl_passwd.j2
+     dest: /etc/postfix/sasl_passwd
+     mode: '0644'
+     owner: root
+     group: root
+   notify: postmap sasl_passwd
+   when: ansible_facts['hostname'] == primary_server
+
+ - name: create postfix sasl_passwd_02 file
+   template:
+     src: sasl_passwd.j2
+     dest: /etc/postfix/sasl_passwd_02
+     mode: '0644'
+     owner: root
+     group: root
+   notify: postmap sasl_passwd_02
+   when: ansible_facts['hostname'] == secondary_server
+
+ - name: added to /etc/aliases
+   lineinfile:
+     path: /etc/aliases
+     regexp: '^#{0,1}root:'
+     line: "root:     {{mail}}"
+     backup: yes
+   notify: reload postfix
+
+ - name: ensure postfix is running
+   service:
+     name: postfix
+     state: started
+     enabled: yes
